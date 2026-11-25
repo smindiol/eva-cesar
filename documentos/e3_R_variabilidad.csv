@@ -1,0 +1,17 @@
+"base","escala","variable","n","pct_total","pct_dentro_cultivo"
+"completa","t_ha","cultivo",2123,89.9687089259864,
+"completa","t_ha","municipio",2123,2.6388262604651,36.7652812157082
+"completa","t_ha","ano",2123,0.309333626839457,10.4394806439375
+"completa","t_ha","area_sembrada",2123,4.92028450678658,7.7382140332457
+"completa","log_t_ha","cultivo",2123,94.372453007477,
+"completa","log_t_ha","municipio",2123,3.77179834738892,32.0898663418344
+"completa","log_t_ha","ano",2123,0.264242985465276,22.5820791895211
+"completa","log_t_ha","area_sembrada",2123,1.66982604312901,7.48447414015101
+"depurada","t_ha","cultivo",2117,90.5941533917192,
+"depurada","t_ha","municipio",2117,2.63895414362483,36.4193945812249
+"depurada","t_ha","ano",2117,0.312818371086614,10.5628404345143
+"depurada","t_ha","area_sembrada",2117,5.10804015122547,6.93350718335264
+"depurada","log_t_ha","cultivo",2117,94.7448869934719,
+"depurada","log_t_ha","municipio",2117,3.77274993072101,32.9473254328848
+"depurada","log_t_ha","ano",2117,0.2796096562773,23.2018948328588
+"depurada","log_t_ha","area_sembrada",2117,1.73855069277368,7.31748928727378

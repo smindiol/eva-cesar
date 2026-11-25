@@ -1,0 +1,28 @@
+# Salidas locales de Jupyter y Python
+.ipynb_checkpoints/
+.ejecutados/
+.venv/
+__pycache__/
+*.py[cod]
+*.html
+
+# Auxiliares de LaTeX
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.nav
+*.out
+*.snm
+*.synctex.gz
+*.toc
+*.xdv
+/documentos/informe_fuente/informe_final.pdf
+
+# Archivos locales
+.env
+.env.*
+.RData
+.Rhistory
+.DS_Store
+*.zip

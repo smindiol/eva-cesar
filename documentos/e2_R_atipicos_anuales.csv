@@ -1,0 +1,7 @@
+"cod_mun","municipio","cultivo","ano","n_registros","area_sembrada_ha","area_cosechada_ha","produccion_t","n_discrepancias","n_sin_cosecha","rendimiento_t_ha","log_rendimiento","atipico_severo","cerca_sup_log","cerca_inf_log","motivo"
+"20013","AGUSTIN CODAZZI","CAFE",2011,1,6093,5543,1109,0,0,0.20007216308858,-1.60907716206944,TRUE,0.627287748125626,-1.49335076736543,"fuera de las cercas exteriores de 3 IQR"
+"20178","CHIRIGUANA","ALGODON",2007,1,40,40,15,0,0,0.375,-0.980829253011726,TRUE,2.20516472705137,-0.802875644301246,"fuera de las cercas exteriores de 3 IQR"
+"20228","CURUMANI","ARROZ",2016,2,239,108,156,0,0,1.44444444444444,0.367724780125317,TRUE,2.34426684119919,0.925975747002366,"fuera de las cercas exteriores de 3 IQR"
+"20614","RIO DE ORO","YUCA",2016,1,350,250,750,0,0,3,1.09861228866811,TRUE,2.97201574693668,1.41001088773721,"fuera de las cercas exteriores de 3 IQR"
+"20614","RIO DE ORO","YUCA",2017,1,250,220,660,0,0,3,1.09861228866811,TRUE,2.97201574693668,1.41001088773721,"fuera de las cercas exteriores de 3 IQR"
+"20614","RIO DE ORO","YUCA",2018,1,350,350,1050,0,0,3,1.09861228866811,TRUE,2.97201574693668,1.41001088773721,"fuera de las cercas exteriores de 3 IQR"

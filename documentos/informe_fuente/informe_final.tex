@@ -1,0 +1,366 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2.15cm]{geometry}
+\usepackage[spanish,es-minimal,es-nodecimaldot]{babel}
+\usepackage{graphicx,booktabs,xcolor,amsmath,hyperref}
+\usepackage[font=small,labelfont=bf,hypcap=false]{caption}
+
+\definecolor{eva}{HTML}{67419A}
+\definecolor{tinta}{HTML}{203438}
+\hypersetup{colorlinks,linkcolor=eva,urlcolor=eva,pdftitle={Rendimiento agrícola en el Cesar}}
+\graphicspath{{../figuras/}{documentos/figuras/}}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+\renewcommand{\baselinestretch}{1.06}
+\newcommand{\autores}{Sebastián Mindiola · William Andres Velasquez Ruiz · Jhon Eduardo Meneses Viecco}
+\newcommand{\figura}[3]{%
+  \begin{center}
+    \begin{minipage}{\linewidth}
+      \centering\includegraphics[width=#1]{#2}\captionof{figure}{#3}
+    \end{minipage}
+  \end{center}}
+
+\begin{document}
+\color{tinta}
+{\color{eva}\small\textbf{UNIVERSIDAD NACIONAL DE COLOMBIA}\par}
+\vspace{.25cm}
+{\huge\bfseries Rendimiento agrícola en el Cesar\par}
+{\large Evaluaciones Agropecuarias Municipales, 2007--2018\par}
+\vspace{.3cm}
+{\small \autores\par
+Programación en Lenguajes Estadísticos (2026-2) · Docente Yoselin Nieto G.\par
+25 de noviembre de 2026\par}
+
+\section*{Resumen ejecutivo}
+Estudiamos cómo varía el rendimiento agrícola entre cultivos, municipios y años.
+El flujo en R y Python identificó 2.134 registros anuales para los diez cultivos principales,
+que representan el 92,8\,\% del área sembrada. Marcamos seis rendimientos fuera de las cercas
+exteriores del rango intercuartílico y repetimos el análisis con esas observaciones.
+
+Las diferencias entre las medias de los cultivos reúnen el 90,59\,\% de la variabilidad
+del rendimiento en t/ha. Dentro de los cultivos, la separación por municipio reúne
+la mayor fracción entre las variables examinadas. La cobertura varía entre años y cultivos,
+por lo que las trayectorias departamentales reflejan los municipios que reportaron cada año.
+
+\section{Primera inspección}
+El \href{https://www.datos.gov.co/d/2pnw-mmge}{registro EVA}
+contiene 206.068 filas nacionales. El subconjunto del Cesar reúne 4.887 registros,
+25 municipios y 50 cultivos. Cada fila identifica cultivo, municipio, año,
+periodo y sistema productivo, con hectáreas sembradas y cosechadas, producción en toneladas y
+rendimiento reportado en t/ha. El periodo permite distinguir los registros anuales de los
+semestrales. En particular, \texttt{2016A} y \texttt{2016B} corresponden a los dos semestres de 2016.
+
+Una vez convertidas las cantidades del CSV, \texttt{head()} devuelve las primeras filas del
+subconjunto del Cesar en el orden del archivo. El cuadro recoge las columnas que usamos
+en el análisis. Estas cinco filas corresponden a aguacate y el periodo \texttt{2007}
+identifica un registro anual.
+
+\begin{center}
+\begin{minipage}{\linewidth}
+\centering\small
+\begin{tabular}{lrrrrr}
+\toprule
+Municipio & Periodo & Sembrada (ha) & Cosechada (ha) & Producción (t) & Rend. (t/ha)\\
+\midrule
+Valledupar          & 2007 & 713 & 713 & 5.704 & 8,00\\
+La Jagua de Ibirico & 2007 & 430 & 430 & 2.150 & 5,00\\
+La Paz              & 2007 & 300 & 300 & 3.000 & 10,00\\
+Pueblo Bello        & 2007 & 105 & 103 & 830 & 8,06\\
+San Martín          & 2007 & 90 & 80 & 640 & 8,00\\
+\bottomrule
+\end{tabular}
+\captionof{table}{Primeras cinco filas del Cesar tras la importación. El rendimiento de la última columna es el que reporta EVA.}
+\end{minipage}
+\end{center}
+En San Martín se sembraron 90 ha de aguacate y se cosecharon 80. Las 640 t producidas
+equivalen a \(640/80=8\) t por hectárea cosechada. Al extender la revisión a los 4.887 registros
+del Cesar, el cuadro muestra los límites de cada variable numérica y el número de filas sin valor.
+
+\begin{center}
+\begin{minipage}{\linewidth}
+\centering\small
+\begin{tabular}{lrrr}
+\toprule
+Variable & Mínimo & Máximo & Faltantes\\
+\midrule
+Área sembrada (ha) & 1 & 18.000 & 0\\
+Área cosechada (ha) & 0 & 16.000 & 0\\
+Producción (t) & 0 & 51.000 & 0\\
+Rendimiento reportado (t/ha) & 0,20 & 184 & 53\\
+\bottomrule
+\end{tabular}
+\captionof{table}{Rangos y valores faltantes en el subconjunto del Cesar antes de limpiar y agrupar. Los extremos del rango se calculan sobre los valores presentes.}
+\end{minipage}
+\end{center}
+
+Los 53 rendimientos faltantes representan el 1,08\,\% de las filas. En todos esos casos
+EVA reportó cero hectáreas cosechadas y cero toneladas de producción. Las otras 16 columnas
+tienen datos en todas las filas.
+
+Los mínimos y máximos indican los límites de la base. Los histogramas muestran cuántos
+registros se concentran cerca de un extremo o se reparten a lo largo del rango. Cada panel
+corresponde a una de las cuatro variables del cuadro y la altura de cada barra cuenta los
+registros que caen en ese intervalo.
+
+El área sembrada tiene una mediana de 138 ha y alcanza 18.000 ha. En un eje lineal, unos
+pocos registros grandes comprimen la mayor parte de las barras cerca de cero. Usamos
+el logaritmo decimal para acortar esa cola. Sumamos 1 dentro del logaritmo para conservar
+las filas con valor cero, pues \(\log_{10}(1+0)=0\). Para cada valor original \(x_i\), la posición es
+\[
+u_i=\log_{10}(1+x_i).
+\]
+Por ejemplo, las 713 ha sembradas de Valledupar caen cerca de
+\(\log_{10}(714)=2{,}85\) en el primer panel. La transformación fija la posición de cada
+observación en el gráfico. Las cantidades originales se usan al sumar áreas y producción.
+
+\figura{.91\linewidth}{eva_Py_01_inspeccion.png}{Distribución de las áreas sembrada y cosechada, la producción
+y el rendimiento reportado en Cesar. El eje horizontal usa la escala transformada y el vertical cuenta registros.}
+
+\section{Limpieza y construcción de la tabla anual}
+
+Leímos el CSV como texto y convertimos las cantidades con punto de miles y coma decimal.
+Estandarizamos los textos y conservamos los códigos municipales como identificadores.
+La revisión encontró cero duplicados y cero filas con cantidades incompatibles en las áreas
+y la producción. Hubo 59 discrepancias superiores a la tolerancia
+\(0{,}05\lvert y_{\text{reportado}}\rvert+0{,}01\) entre el rendimiento reportado y el cociente recalculado.
+Las marcamos para consulta y usamos las cantidades aditivas para calcular el rendimiento anual.
+
+Conservamos las 9.580 hectáreas sembradas de los registros sin cosecha para medir la superficie
+dedicada a la siembra. Al agregar los datos, sumamos las hectáreas de los cultivos y años elegibles.
+El año 2006 solo presenta registros del periodo B en el archivo de Cesar y queda fuera
+de la agregación anual. Para 2007--2018 sumamos las cantidades por municipio, cultivo y año,
+y calculamos
+\[
+Y_{mct}=\frac{\sum_{i\in(m,c,t)}\mathrm{producci\acute on}_i}
+                  {\sum_{i\in(m,c,t)}\mathrm{\acute area\ cosechada}_i}.
+\]
+Cuando el denominador es cero, el rendimiento queda indefinido. El criterio de selección de
+los diez cultivos principales fue el área sembrada acumulada en los años completos.
+De las 2.134 filas anuales, 11 carecen de cosecha y 2.123 tienen rendimiento definido.
+
+
+\subsection*{De dos registros de arroz a una observación anual}
+En Curumaní, EVA reportó 131 t de arroz en 88 ha durante 2016A. En 2016B
+reportó 25 t en 20 ha. La fila anual suma por separado producción y superficie cosechada.
+\[
+Y_{\text{Curumaní, arroz, 2016}}
+=\frac{131+25}{88+20}
+=\frac{156}{108}
+=1{,}44\text{ t/ha}.
+\]
+Al sumar las áreas antes de dividir, las 88 ha del primer semestre pesan más que las 20 ha
+del segundo. La misma regla permite agregar municipios para construir las series departamentales.
+
+\section{Atípicos con el rango intercuartílico}
+
+El primer cuartil \(Q_1\) deja cerca del 25\,\% de los valores por debajo y el tercero \(Q_3\)
+deja cerca del 75\,\%. La resta \(Q_3-Q_1\) mide la amplitud de la mitad central de los datos.
+Para detectar extremos, usamos \(x=\ln(Y)\) en los rendimientos anuales positivos. En esta
+escala, las distancias corresponden a razones entre rendimientos
+\[
+\ln(Y_2)-\ln(Y_1)=\ln(Y_2/Y_1).
+\]
+Subir de 1 a 2 t/ha y subir de 5 a 10 t/ha representa en ambos casos duplicar el
+rendimiento. Las dos diferencias logarítmicas valen \(\ln(2)\). Esta propiedad motiva
+el uso de distancias relativas dentro de cada cultivo. Calculamos las cercas del IQR
+cuando el cultivo tiene al menos 20 rendimientos positivos y su IQR es mayor que cero.
+\[
+\mathrm{IQR}=Q_3-Q_1,\qquad
+L=Q_1-3\,\mathrm{IQR},\qquad U=Q_3+3\,\mathrm{IQR}.
+\]
+Marcamos un extremo si \(x<L\) o \(x>U\). El factor 3 corresponde a las
+\href{https://itl.nist.gov/div898/handbook/prc/section1/prc16.htm}{cercas exteriores}.
+Los diagramas de caja suelen usar el factor 1,5 para sus bigotes.
+
+El rendimiento anual de 1,44 t/ha que obtuvimos para Curumaní se compara con los demás registros de arroz.
+En ese cultivo, los cuartiles del log-rendimiento son aproximadamente 1,534 y 1,736.
+Con los valores sin redondear, el IQR es 0,203 y la cerca inferior es 0,926.
+\[
+\ln(156/108)\approx0{,}368 < 0{,}926
+\qquad\Longleftrightarrow\qquad
+1{,}44 < e^{0{,}926}\approx 2{,}52\text{ t/ha}.
+\]
+Curumaní en 2016 queda por debajo de esa cerca. De las 2.134 filas anuales, 11 tienen
+rendimiento indefinido por falta de cosecha. El IQR se aplica a las 2.123 restantes
+y marca \textbf{seis observaciones municipio, cultivo y año}. Se excluyen una de café,
+una de algodón, una de arroz y tres de yuca.
+\[
+\begin{aligned}
+2\,134-11 &= 2\,123 && \text{rendimientos definidos},\\
+2\,123-6 &= 2\,117 && \text{rendimientos en el análisis depurado}.
+\end{aligned}
+\]
+
+\begin{center}
+\begin{minipage}{\linewidth}
+\centering\small
+\begin{tabular}{llrr}
+\toprule
+Cultivo & Municipio & Año & Rendimiento (t/ha)\\
+\midrule
+Café & Agustín Codazzi & 2011 & 0,20\\
+Algodón & Chiriguaná & 2007 & 0,38\\
+Arroz & Curumaní & 2016 & 1,44\\
+Yuca & Río de Oro & 2016--2018 & 3,00 cada año\\
+\bottomrule
+\end{tabular}
+\end{minipage}
+\end{center}
+
+Los seis casos anuales reúnen siete registros del CSV original porque Curumaní en 2016
+aporta dos semestres. La tabla anual depurada tiene 2.128 filas. De ellas, las 11 sin
+rendimiento se conservan para documentar la cobertura y quedan fuera de los cálculos.
+La tabla completa permite repetir el análisis con los seis extremos. En Curumaní el arroz dio 4,47 t/ha
+en 2015, 1,44 en 2016 y 4,35 en 2017. La yuca de Río de Oro pasó de 7 t/ha en 2015 a
+3 t/ha durante tres años consecutivos con distintas superficies cosechadas.
+Este segundo patrón es sostenido en los registros. Tratamos las exclusiones como una
+decisión de sensibilidad y conservamos ambas versiones para interpretar los resultados.
+
+\section{Forma y dispersión del rendimiento}
+El diagrama de cajas muestra que cacao, café y fríjol suelen quedar por debajo de 1 t/ha,
+mientras la yuca se concentra alrededor de 9 t/ha. Los productos se reportan en estados
+físicos distintos, como grano seco, aceite crudo y tubérculo fresco. Las diferencias de nivel
+entre cultivos reflejan también esa diferencia en lo que se pesa. Las comparaciones de
+cambios se realizan dentro de cada cultivo.
+
+\figura{.80\linewidth}{eva_R_02_cajas.png}{Rendimiento anual por cultivo en escala logarítmica.
+Cada fila del gráfico reúne los rendimientos anuales de un cultivo. La línea interior es la mediana.
+La caja va de \(Q_1\) a \(Q_3\). Los bigotes llegan a las observaciones más lejanas dentro
+de las cercas de \(1{,}5\,\mathrm{IQR}\) y los puntos ocres destacan los extremos de \(3\,\mathrm{IQR}\).
+El gráfico usa la tabla anual completa.}
+
+\begin{center}
+\begin{minipage}{\linewidth}
+\centering\small
+\begin{tabular}{lrrrrr}
+\toprule
+Cultivo & \(n\) & \(Q_1\) & Mediana & \(Q_3\) & DE\\
+\midrule
+Algodón & 92 & 1,64 & 2,20 & 2,50 & 0,67\\
+Arroz & 215 & 4,64 & 5,03 & 5,69 & 0,79\\
+Cacao & 219 & 0,40 & 0,50 & 0,60 & 0,11\\
+Café & 227 & 0,56 & 0,62 & 0,76 & 0,16\\
+Caña panelera & 89 & 3,00 & 4,00 & 4,50 & 1,05\\
+Fríjol & 224 & 0,60 & 0,70 & 0,78 & 0,14\\
+Maíz & 289 & 1,00 & 1,24 & 1,60 & 0,60\\
+Palma de aceite & 241 & 3,00 & 3,30 & 3,58 & 0,51\\
+Plátano & 236 & 5,00 & 6,10 & 7,00 & 1,65\\
+Yuca & 285 & 8,00 & 9,03 & 10,00 & 1,81\\
+\bottomrule
+\end{tabular}
+\captionof{table}{Descriptivos de la base depurada. Por cultivo, \(n\) cuenta combinaciones de
+municipio y año con rendimiento definido, tras retirar los extremos. Cuartiles y desviación
+estándar (DE) en t/ha.}
+\end{minipage}
+\end{center}
+
+Los histogramas del análisis muestran una cola derecha visible en maíz y plátano,
+y concentraciones repetidas en cacao y caña panelera. La mediana y los cuartiles permiten
+resumir estas formas. Los histogramas por cultivo se adjuntan con las demás figuras.
+
+
+\section{Variabilidad entre cultivos y dentro de cada cultivo}
+
+En la base depurada, las diferencias entre las medias de los cultivos reúnen el
+90,59\,\% de la variabilidad del rendimiento en t/ha. El cálculo asigna el mismo
+peso a cada una de las 2.117 observaciones anuales con rendimiento definido.
+Sea \(y_i\) el rendimiento de la observación \(i\), \(\bar y\) la media general,
+\(\bar y_c\) la media del cultivo \(c\) y \(n_c\) su número de observaciones. La suma
+de cuadrados total se descompone así
+\[
+\underbrace{\sum_i (y_i-\bar y)^2}_{\mathrm{Total}} =
+\underbrace{\sum_c n_c(\bar y_c-\bar y)^2}_{\mathrm{Entre\ cultivos}} +
+\underbrace{\sum_c\sum_{i\in c}(y_i-\bar y_c)^2}_{\mathrm{Dentro\ de\ los\ cultivos}}.
+\]
+La media general es 3,5317 t/ha. Por ejemplo, el cacao tiene 219 observaciones y una media
+de 0,5119 t/ha. Su término en la suma entre cultivos es
+\(219(0{,}5119-3{,}5317)^2\approx1\,997{,}1\).
+Sumamos un término por cultivo y dividimos por la suma total.
+\[
+100\times\frac{19\,437{,}84}{21\,455{,}95}=90{,}59\,\%.
+\]
+El 9,41\,\% restante corresponde a diferencias
+dentro de los cultivos. Con los seis extremos incluidos, la proporción entre cultivos
+es 89,97\,\%. En escala logarítmica es 94,74\,\% en la base depurada.
+
+\figura{.94\linewidth}{eva_Py_10_variabilidad.png}{Porcentaje de suma de cuadrados entre los grupos de cada variable.
+El panel izquierdo usa la variabilidad total en t/ha como denominador. El derecho usa
+la variabilidad que queda dentro de los cultivos. Las dos escalas horizontales son distintas.}
+
+El municipio y el año definen sus propios grupos. Para el área sembrada, usamos los cortes de los quintiles.
+En el panel derecho, cada observación se compara con la media de su propio cultivo.
+Si \(g\) es el municipio, año o grupo de área dentro de \(c\), \(n_{cg}\) es su
+número de registros y \(\bar y_{cg}\) es su media, la barra derecha se calcula como
+\[
+100\,\frac{\sum_c\sum_g n_{cg}(\bar y_{cg}-\bar y_c)^2}
+{\sum_c\sum_{i\in c}(y_i-\bar y_c)^2}.
+\]
+Los cortes de área se calculan por separado en cada cultivo.
+
+El municipio reúne la mayor fracción de la variabilidad interna en t/ha
+(36,42\,\%), seguido del año (10,56\,\%) y los quintiles de área sembrada (6,93\,\%).
+Estos porcentajes se calculan por separado y pueden solaparse. También dependen del número
+de grupos, de su tamaño y, en el caso del área, de los cortes elegidos.
+La identidad algebraica prescinde de supuestos de normalidad, independencia y varianza
+constante. Las proporciones describen las diferencias de esta base.
+
+\section{Cobertura y trayectoria anual}
+La cobertura de datos condiciona la comparación. La yuca registra 24 municipios con
+rendimiento definido en cada año y el café 19. El algodón llega a 14 municipios en 2011,
+baja a dos en 2016 y carece de datos en 2018. La caña panelera tiene entre seis y ocho
+municipios según el año. Esas diferencias anticipan qué cultivos tendrán evidencia limitada.
+
+\figura{.90\linewidth}{eva_Py_06_cobertura.png}{Número de municipios con rendimiento definido
+en la tabla completa de cada cultivo y año. Cero indica ausencia de observaciones disponibles.}
+
+\figura{.93\linewidth}{eva_R_04_trayectorias.png}{Rendimiento departamental ponderado por área cosechada.
+Las escalas verticales son independientes. El arroz cae durante buena parte del periodo y repunta
+en 2018. La palma baja después de 2012 y recupera parte del nivel al final.}
+
+Cada punto de la trayectoria agrega los municipios de un cultivo en un año. Por ejemplo, el
+punto de arroz en 2018 combina 46.247 t en 7.722 ha cosechadas y vale
+\(46\,247/7\,722=5{,}99\) t/ha. La cosecha total pondera el aporte de cada municipio.
+
+\section{Diferencias municipales}
+Para comparar territorios, restamos a cada rendimiento la mediana de su cultivo y año.
+En maíz, San Martín quedó 1,82 t/ha por encima de esa referencia en la mediana de las
+desviaciones de 12 años. El Paso quedó 0,31 t/ha por debajo con la misma cobertura.
+Para construir el mapa, expresamos la desviación de cada año en porcentaje de la mediana de
+referencia \(M_{ct}\). Cada celda resume la mediana de los porcentajes de un municipio y cultivo.
+\[
+D_{mct}=100\,\frac{Y_{mct}-M_{ct}}{M_{ct}}.
+\]
+Un valor de 20\,\% indica un rendimiento un quinto por encima de la referencia.
+
+\figura{.64\linewidth}{eva_Py_07_territorio.png}{Mediana municipal de las desviaciones porcentuales
+respecto a la mediana del mismo cultivo y año. La escala de color satura en \(\pm40\,\%\).
+La tabla territorial adjunta indica cuántos años sustentan cada celda.}
+
+\section{Conclusiones}
+
+La mayor parte de la variabilidad observada del rendimiento corresponde a las diferencias
+entre las medias de los cultivos. En t/ha, esa fracción es 90,59\,\% con la base depurada y
+89,97\,\% al incluir los seis extremos. En la comparación interviene el estado físico en que
+EVA registra cada producto. Una tonelada de grano seco y una tonelada de tubérculo fresco
+representan productos distintos.
+
+Al comparar registros del mismo cultivo, la separación por municipio reúne el 36,42\,\%
+de la variabilidad interna en t/ha. La separación por año reúne el 10,56\,\% y por grupos
+de área sembrada, el 6,93\,\%. Cada cálculo compara grupos de una sola variable, de modo que
+las fracciones pueden solaparse. El maíz ilustra la diferencia territorial con San Martín
+por encima de la referencia de su cultivo y El Paso por debajo, ambos con 12 años observados.
+
+La cobertura condiciona la lectura de las series departamentales. La yuca tiene 24 municipios
+con rendimiento definido en cada año. El algodón pasa de 14 en 2011 a dos en 2016 y a ninguno
+en 2018. Estas series resumen la producción y la cosecha de los municipios disponibles
+en cada año. Los cambios observados pueden combinar diferencias de rendimiento y de cobertura.
+
+\subsection*{Reproducibilidad}
+La carpeta del proyecto contiene el CSV de EVA, scripts de R, cuadernos de Colab, tablas y
+figuras. La ejecución local contrastó filas, atípicos y descriptivos entre ambos lenguajes. Las cifras del informe se cotejaron con las salidas de ambos flujos.
+La revisión visual comprobó los ejes, las unidades y la correspondencia entre cada figura
+y su interpretación.
+
+\paragraph{Uso de IA}
+Se usó IA generativa como apoyo para escribir el código.
+
+\end{document}
