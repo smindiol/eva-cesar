@@ -4,7 +4,7 @@
 
 [![Primera página del informe. Pulsa para abrir el PDF completo.](documentos/vista_previa_informe.png)](documentos/Informe_final_EVA_Cesar.pdf)
 
-Sebastián Mindiola · William Andres Velasquez Ruiz · Jhon Eduardo Meneses Viecco
+Sebastián Mindiola · William Andrés Velasquez Ruiz · Jhon Eduardo Meneses Viecco
 
 Programación en Lenguajes Estadísticos (2026-2) · Universidad Nacional de Colombia
 
@@ -16,14 +16,14 @@ Las diferencias entre las medias de los cultivos reúnen el **90,59 %** de la va
 
 ## Organización
 
-| Carpeta | Contenido |
-|---|---|
-| [datos/datos_crudos](datos/datos_crudos/) | CSV original de EVA. |
-| [datos/datos_limpios](datos/datos_limpios/) | Subconjuntos y tablas anuales que producen R y Python. |
-| [scripts_R](scripts_R/) | Diagnóstico, limpieza, agregación anual y resultados descriptivos. |
-| [notebooks_Python](notebooks_Python/) | Las mismas tres etapas para Jupyter o Colab. |
-| [documentos](documentos/) | Informe, diccionario, tablas de resultados y figuras. |
-| [documentos/presentacion](documentos/presentacion/) | Presentación, fuente Beamer y recursos del tema Oxygen de la UNAL. |
+| Carpeta                                            | Contenido                                                            |
+| -------------------------------------------------- | -------------------------------------------------------------------- |
+| [datos/datos_crudos](datos/datos_crudos/)           | CSV original de EVA.                                                 |
+| [datos/datos_limpios](datos/datos_limpios/)         | Subconjuntos y tablas anuales que producen R y Python.               |
+| [scripts_R](scripts_R/)                             | Diagnóstico, limpieza, agregación anual y resultados descriptivos. |
+| [notebooks_Python](notebooks_Python/)               | Las mismas tres etapas para Jupyter o Colab.                         |
+| [documentos](documentos/)                           | Informe, diccionario, tablas de resultados y figuras.                |
+| [documentos/presentacion](documentos/presentacion/) | Presentación, fuente Beamer y recursos del tema Oxygen de la UNAL.  |
 
 El CSV proviene del [registro público de Evaluaciones Agropecuarias Municipales](https://www.datos.gov.co/d/2pnw-mmge). Los programas incluyen el diagnóstico de 2006. El análisis anual comienza en 2007 porque el subconjunto del Cesar solo tiene el semestre B de 2006.
 
