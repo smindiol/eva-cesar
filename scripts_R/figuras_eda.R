@@ -10,6 +10,12 @@ puntos <- anual[is.finite(anual$rendimiento_t_ha), ]
 puntos$cultivo <- factor(etiqueta(puntos$cultivo),
                         levels = etiqueta(names(sort(tapply(puntos$rendimiento_t_ha, puntos$cultivo, median)))))
 extremos <- puntos[puntos$atipico_severo, ]
+extremos$posicion_cultivo <- as.integer(extremos$cultivo) +
+  ave(rep(0, nrow(extremos)), extremos$cultivo, extremos$rendimiento_t_ha,
+      FUN = function(grupo) {
+        if (length(grupo) == 1L) return(0)
+        seq(-.25, .25, length.out = length(grupo))
+      })
 trayectorias$cultivo <- etiqueta(trayectorias$cultivo)
 cobertura$cultivo <- etiqueta(cobertura$cultivo)
 cobertura <- merge(expand.grid(ano = 2007:2018, cultivo = unique(cobertura$cultivo)),
@@ -29,9 +35,10 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
            width = ancho, height = alto, dpi = 190)
   }
 
-  cajas <- ggplot(puntos, aes(rendimiento_t_ha, cultivo)) +
-    geom_boxplot(outlier.shape = NA, width = .55, colour = violeta, fill = "#E9DDF7") +
-    geom_point(data = extremos, colour = ocre, size = 2, alpha = .8) +
+  cajas <- ggplot(puntos, aes(rendimiento_t_ha, as.integer(cultivo), group = cultivo)) +
+    geom_boxplot(orientation = "y", outlier.shape = NA, width = .55, colour = violeta, fill = "#E9DDF7") +
+    geom_point(data = extremos, aes(y = posicion_cultivo), colour = ocre, size = 2) +
+    scale_y_continuous(breaks = seq_along(levels(puntos$cultivo)), labels = levels(puntos$cultivo)) +
     labs(title = "Rendimiento anual por cultivo", subtitle = "Puntos ocres: fuera de las cercas de 3 IQR",
          x = "Rendimiento (t/ha)", y = NULL)
   if (all(puntos$rendimiento_t_ha > 0)) cajas <- cajas + scale_x_log10()
@@ -74,7 +81,7 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
   axis(2, at = seq_along(levels(puntos$cultivo)), labels = levels(puntos$cultivo), tick = FALSE)
   abline(v = if (usar_log) log10(eje) else eje, col = "#E0D7EB", lty = 3)
   points(if (usar_log) log10(extremos$rendimiento_t_ha) else extremos$rendimiento_t_ha,
-         as.integer(extremos$cultivo), pch = 19, col = ocre)
+         extremos$posicion_cultivo, pch = 19, cex = .78, col = ocre)
   title("Rendimiento anual por cultivo", xlab = if (usar_log) "Rendimiento (t/ha), escala logarítmica" else "Rendimiento (t/ha)")
   mtext("Los puntos ocres quedan fuera de las cercas de 3 IQR", side = 3, line = .1)
   invisible(dev.off())
